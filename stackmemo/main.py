@@ -81,10 +81,7 @@ class QandA:
             self.generate_candidates()
         return self.candidates.pop()
 
-    def __init__(self):
-        self.candidates = []
-        self.counter = self.get_candidate()
-        self.question = True
+    def _build_ui(self):
         style_fnt = lv.style_t()
         style_fnt.init()
         style_fnt.set_text_font(lv.font_montserrat_16)
@@ -92,7 +89,8 @@ class QandA:
         self.label.add_style(style_fnt, 0)
         self.label.set_long_mode(lv.label.LONG.WRAP)
         self.label.set_width(240)
-        self.label.set_text(colorify(qa[self.counter]["question"]))
+        q = self.question["question"]
+        self.label.set_text(colorify(q))
         self.label.set_recolor(True)
         self.question = False
         self.label.set_style_text_align(lv.TEXT_ALIGN.LEFT, 0)
@@ -101,23 +99,35 @@ class QandA:
         next_button.align(lv.ALIGN.BOTTOM_RIGHT, -10, -10)
         next_button.set_size(120, 50)
         self.next_button_label = lv.label(next_button)
-        self.next_button_label.set_text("Show answer")
+        self.next_button.add_flag(lv.obj.FLAG.HIDDEN)
+        self.next_button_label.set_text("Next question")
         self.next_button_label.align(lv.ALIGN.CENTER, 0, 0)
         next_button.add_event_cb(self.next_event_handler, lv.EVENT.ALL, None)
+        # Missing: the GOOD/BAD answer buttons, need to be constructed now
 
-    def next_event_handler(self, evt):
+
+    def __init__(self):
+        memos = {}#json.loads("memos.json")
+        self.qer = Questioner(qa, memos)
+        self.question = self.qer.get_question()
+        self.questioning = True
+        self._build_ui()
+
+    def next_question_event_handler(self, evt):
         code = evt.get_code()
         if code != lv.EVENT.CLICKED:
             return
-        if self.question:
+        if self.questioning:
+            q = self.question["question"]
             self.label.set_text(str(self.counter))
-            self.label.set_text(colorify(qa[self.counter]["question"]))
-            self.question = False
+            self.label.set_text(colorify(q))
+            self.questioning = False
             self.next_button_label.set_text("Show answer")
         else:
-            self.label.set_text(colorify(qa[self.counter]["answer"]))
-            self.question = True
-            self.counter = self.get_candidate()
+            a = self.question["answer"]
+            self.label.set_text(colorify(a))
+            self.questioning = True
+            # Now update question depending on what was pressed as answer, missing buttons
             self.next_button_label.set_text("Next question")
 
 
