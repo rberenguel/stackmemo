@@ -1,7 +1,8 @@
 import gc
 import lvgl as lv
 
-import random
+import json
+import time
 
 from qa import qa
 from questioner import Questioner
@@ -18,12 +19,6 @@ gc.collect()
 m5.lcd_brightness(20)
 m5.power_led(False)
 
-def off_event_handler(evt):
-    code = evt.get_code()
-    if code != lv.EVENT.CLICKED:
-        return
-    m5.power_off()
-
 
 style_btn_red = lv.style_t()
 style_btn_red.init()
@@ -33,14 +28,9 @@ style_btn_green = lv.style_t()
 style_btn_green.init()
 style_btn_green.set_bg_color(lv.palette_main(lv.PALETTE.GREEN))
 
-off_button = lv.btn(lv.scr_act())
-off_button.add_style(style_btn_red, 0)
-off_button.align(lv.ALIGN.TOP_LEFT, 8, 8)
-off_button.set_size(90, 30)
-off_button_label = lv.label(off_button)
-off_button_label.set_text("Turn off")
-off_button_label.align(lv.ALIGN.CENTER, 0, 0)
-off_button.add_event_cb(off_event_handler, lv.EVENT.ALL, None)
+style_btn_do = lv.style_t()
+style_btn_do.init()
+style_btn_green.set_bg_color(lv.palette_main(lv.PALETTE.DEEP_ORANGE))
 
 
 def colorify(txt):
@@ -70,13 +60,6 @@ def colorify(txt):
     return "".join(new_text)
 
 
-def shuffle(array):
-    "Fisher–Yates shuffle (from https://stackoverflow.com/a/73144775)"
-    for i in range(len(array) - 1, 0, -1):
-        j = random.randrange(i + 1)
-        array[i], array[j] = array[j], array[i]
-
-
 class QandA:
     def generate_candidates(self):
         self.candidates = [i for i in range(0, len(qa))]
@@ -88,11 +71,33 @@ class QandA:
         return self.candidates.pop()
 
     def _build_ui(self):
+        self._ui_off_button()
         self._ui_main_text()
         self._ui_next_button()
         self._ui_wrong_button()
         self._ui_right_button()
         # Missing: the GOOD/BAD answer buttons, need to be constructed now
+    
+    def off_event_handler(self, evt):
+        code = evt.get_code()
+        if code != lv.EVENT.CLICKED:
+            return
+        self.off_button_label.set_text("Turning off, will save")
+        with open("memo.json") as f:
+            json.dump(self.questioner.dump())
+        time.sleep(1)
+        m5.power_off()
+
+    def _ui_off_button(self):
+        off_button.add_style(style_btn_do, 0)
+        off_button.align(lv.ALIGN.TOP_LEFT, 8, 8)
+        off_button.set_size(90, 50)
+        self.off_button_label = lv.label(off_button)
+        self.off_button_label.set_text("Turn off")
+        self.off_button_label.align(lv.ALIGN.CENTER, 0, 0)
+        off_button.add_event_cb(self.off_event_handler, lv.EVENT.ALL, None)
+
+
 
     def _ui_wrong_button(self):
         self.wrong_button = lv.btn(lv.scr_act())
@@ -125,6 +130,18 @@ class QandA:
         self.next_button_label.align(lv.ALIGN.CENTER, 0, 0)
         self.next_button.add_event_cb(self.show_answer_event_handler, lv.EVENT.ALL, None)
 
+    def _ui_info_button(self):
+        self.info_button = lv.btn(lv.scr_act())
+        self.info_button.align(lv.ALIGN.TOP_RIGHT, 8, 8)
+        self.info_button.set_size(90, 50)
+        self.info_button_label = lv.label(self.info_button)
+        self.info_button_label.set_text("Info")
+        self.info_button_label.align(lv.ALIGN.CENTER, 0, 0)
+        self.info_button.add_event_cb(self.show_info_event_handler, lv.EVENT.ALL, None)
+        self.info = False
+
+
+
     def _ui_main_text(self):
         style_fnt = lv.style_t()
         style_fnt.init()
@@ -142,6 +159,14 @@ class QandA:
         self.question = self.qer.get_question()
         q = self.question["question"]
         self.label.set_text(colorify(q))
+        self.questioning = True
+        self.answering = False
+
+    def set_answer(self):
+        a = self.question["answer"]
+        self.label.set_text(colorify(a))
+        self.answering = True
+        self.questioning = False
 
     def __init__(self):
         memos = {}#json.loads("memos.json")
@@ -152,17 +177,44 @@ class QandA:
         code = evt.get_code()
         if code != lv.EVENT.CLICKED:
             return
-        self.wrong_button.add_flag(lv.obj.FLAG.HIDDEN)
-        self.right_button.add_flag(lv.obj.FLAG.HIDDEN)
-        self.next_button.clear_flag(lv.obj.FLAG.HIDDEN)
+        self._ui_switch_to_question()
+        q = 2
+        updated = memo.answered(q, self.question)
+        self.questioner.update_question(updated)
+        self._ui_switch_to_question()
+
 
     def right_handler(self, evt):
         code = evt.get_code()
         if code != lv.EVENT.CLICKED:
             return
+        q = 4.5
+        updated = memo.answered(q, self.question)
+        self.questioner.update_question(updated)
+        self._ui_switch_to_question()
+
+    def _ui_switch_to_question(self):
         self.wrong_button.add_flag(lv.obj.FLAG.HIDDEN)
         self.right_button.add_flag(lv.obj.FLAG.HIDDEN)
         self.next_button.clear_flag(lv.obj.FLAG.HIDDEN)
+
+    def show_info_event_handler(self, evt):
+        code = evt.get_code()
+        if code != lv.EVENT.CLICKED:
+            return
+        if self.info:
+            if self.questioning:
+                self.set_question()
+            if self.answering:
+                self.set_answer()
+            self.info = False
+        else:
+            n = self.question["n"]
+            ef = self.question["ef"]
+            i_n = self.question["i_n"]
+            txt = "_n_: "+n+"\n_i_n_:"+i_n+"\n_ef_: "+ef
+            self.label.set_text(colorify(txt))
+            self.info = False
 
     def show_answer_event_handler(self, evt):
         code = evt.get_code()
@@ -170,8 +222,6 @@ class QandA:
             return
         a = self.question["answer"]
         self.label.set_text(colorify(a))
-        self.questioning = False
-        # Now update question depending on what was pressed as answer, missing buttons
         self.next_button.add_flag(lv.obj.FLAG.HIDDEN)
         self.wrong_button.clear_flag(lv.obj.FLAG.HIDDEN)
         self.right_button.clear_flag(lv.obj.FLAG.HIDDEN)

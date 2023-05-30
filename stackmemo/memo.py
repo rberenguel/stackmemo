@@ -6,7 +6,10 @@
    https://www.supermemo.eu
 """
 
-def answered(q, n=1, i_n_1=1, old_ef=2.5):
+def answered(q, memo):
+    n = memo.get("n", 1)
+    i_n_1 = memo.get("i_n_1", 1)
+    old_ef = memo.get("ef", 2.5)
     i_n = interval(q, n, i_n_1, ef)
     ef_p = ef(q, old_ef)
     return {"n": n+1, "i_n": i_n, "ef": ef_p}
@@ -26,7 +29,6 @@ def ef(q, old_ef):
     When ef is unknown, ef is 2.5
     """
     ef_p = old_ef - 0.8+0.28*q-0.02*q*q
-    print(ef_p)
     if ef_p < 1.3:
         ef_p = 1.3
     return ef_p
