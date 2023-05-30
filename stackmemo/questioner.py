@@ -1,4 +1,3 @@
-
 class Questioner:
     def __init__(self, qas, memo):
         self.qas = []
@@ -6,7 +5,6 @@ class Questioner:
             qa.update(memo.get(qa["id"], self._default_info()))
             self.qas.append(qa)
         self._sort()
-
 
     def _sort(self):
         """Shouldn't be extremely expensive to compute, since it's almost all sorted after the first"""
