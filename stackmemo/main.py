@@ -4,6 +4,7 @@ import lvgl as lv
 import random
 
 from qa import qa
+from questioner import Questioner
 
 from axpili9342 import ili9341
 from ft6x36 import ft6x36
@@ -27,6 +28,11 @@ def off_event_handler(evt):
 style_btn_red = lv.style_t()
 style_btn_red.init()
 style_btn_red.set_bg_color(lv.palette_main(lv.PALETTE.RED))
+
+style_btn_green = lv.style_t()
+style_btn_green.init()
+style_btn_green.set_bg_color(lv.palette_main(lv.PALETTE.GREEN))
+
 off_button = lv.btn(lv.scr_act())
 off_button.add_style(style_btn_red, 0)
 off_button.align(lv.ALIGN.TOP_LEFT, 8, 8)
@@ -82,6 +88,44 @@ class QandA:
         return self.candidates.pop()
 
     def _build_ui(self):
+        self._ui_main_text()
+        self._ui_next_button()
+        self._ui_wrong_button()
+        self._ui_right_button()
+        # Missing: the GOOD/BAD answer buttons, need to be constructed now
+
+    def _ui_wrong_button(self):
+        self.wrong_button = lv.btn(lv.scr_act())
+        self.wrong_button.add_style(style_btn_red, 0)
+        self.wrong_button.align(lv.ALIGN.BOTTOM_LEFT, 8, -8)
+        self.wrong_button.set_size(80, 50)
+        wrong_button_label = lv.label(self.wrong_button)
+        wrong_button_label.set_text("Wrong")
+        wrong_button_label.align(lv.ALIGN.CENTER, 0, 0)
+        self.wrong_button.add_event_cb(self.wrong_handler, lv.EVENT.ALL, None)
+        self.wrong_button.add_flag(lv.obj.FLAG.HIDDEN)
+
+    def _ui_right_button(self):
+        self.right_button = lv.btn(lv.scr_act())
+        self.right_button.add_style(style_btn_green, 0)
+        self.right_button.align(lv.ALIGN.BOTTOM_RIGHT, -8, -8)
+        self.right_button.set_size(80, 50)
+        right_button_label = lv.label(self.right_button)
+        right_button_label.set_text("Right")
+        right_button_label.align(lv.ALIGN.CENTER, 0, 0)
+        self.right_button.add_event_cb(self.right_handler, lv.EVENT.ALL, None)
+        self.right_button.add_flag(lv.obj.FLAG.HIDDEN)
+
+    def _ui_next_button(self):
+        self.next_button = lv.btn(lv.scr_act())
+        self.next_button.align(lv.ALIGN.BOTTOM_RIGHT, -10, -10)
+        self.next_button.set_size(120, 50)
+        self.next_button_label = lv.label(self.next_button)
+        self.next_button_label.set_text("Show answer")
+        self.next_button_label.align(lv.ALIGN.CENTER, 0, 0)
+        self.next_button.add_event_cb(self.show_answer_event_handler, lv.EVENT.ALL, None)
+
+    def _ui_main_text(self):
         style_fnt = lv.style_t()
         style_fnt.init()
         style_fnt.set_text_font(lv.font_montserrat_16)
@@ -89,46 +133,47 @@ class QandA:
         self.label.add_style(style_fnt, 0)
         self.label.set_long_mode(lv.label.LONG.WRAP)
         self.label.set_width(240)
-        q = self.question["question"]
-        self.label.set_text(colorify(q))
         self.label.set_recolor(True)
-        self.question = False
         self.label.set_style_text_align(lv.TEXT_ALIGN.LEFT, 0)
         self.label.align(lv.ALIGN.CENTER, 0, -20)
-        next_button = lv.btn(lv.scr_act())
-        next_button.align(lv.ALIGN.BOTTOM_RIGHT, -10, -10)
-        next_button.set_size(120, 50)
-        self.next_button_label = lv.label(next_button)
-        self.next_button.add_flag(lv.obj.FLAG.HIDDEN)
-        self.next_button_label.set_text("Next question")
-        self.next_button_label.align(lv.ALIGN.CENTER, 0, 0)
-        next_button.add_event_cb(self.next_event_handler, lv.EVENT.ALL, None)
-        # Missing: the GOOD/BAD answer buttons, need to be constructed now
+        self.set_question()
 
+    def set_question(self):
+        self.question = self.qer.get_question()
+        q = self.question["question"]
+        self.label.set_text(colorify(q))
 
     def __init__(self):
         memos = {}#json.loads("memos.json")
         self.qer = Questioner(qa, memos)
-        self.question = self.qer.get_question()
-        self.questioning = True
         self._build_ui()
 
-    def next_question_event_handler(self, evt):
+    def wrong_handler(self, evt):
         code = evt.get_code()
         if code != lv.EVENT.CLICKED:
             return
-        if self.questioning:
-            q = self.question["question"]
-            self.label.set_text(str(self.counter))
-            self.label.set_text(colorify(q))
-            self.questioning = False
-            self.next_button_label.set_text("Show answer")
-        else:
-            a = self.question["answer"]
-            self.label.set_text(colorify(a))
-            self.questioning = True
-            # Now update question depending on what was pressed as answer, missing buttons
-            self.next_button_label.set_text("Next question")
+        self.wrong_button.add_flag(lv.obj.FLAG.HIDDEN)
+        self.right_button.add_flag(lv.obj.FLAG.HIDDEN)
+        self.next_button.clear_flag(lv.obj.FLAG.HIDDEN)
 
+    def right_handler(self, evt):
+        code = evt.get_code()
+        if code != lv.EVENT.CLICKED:
+            return
+        self.wrong_button.add_flag(lv.obj.FLAG.HIDDEN)
+        self.right_button.add_flag(lv.obj.FLAG.HIDDEN)
+        self.next_button.clear_flag(lv.obj.FLAG.HIDDEN)
+
+    def show_answer_event_handler(self, evt):
+        code = evt.get_code()
+        if code != lv.EVENT.CLICKED:
+            return
+        a = self.question["answer"]
+        self.label.set_text(colorify(a))
+        self.questioning = False
+        # Now update question depending on what was pressed as answer, missing buttons
+        self.next_button.add_flag(lv.obj.FLAG.HIDDEN)
+        self.wrong_button.clear_flag(lv.obj.FLAG.HIDDEN)
+        self.right_button.clear_flag(lv.obj.FLAG.HIDDEN)
 
 QandA()
