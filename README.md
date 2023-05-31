@@ -24,7 +24,7 @@ There is some minor reformatting of markdown tags in questions and answers, wher
 
 ## Installing
 
-You need to get some form of micropython with lvgl on your board. In my case, I used this one.
+You need to get some form of micropython with `lvgl` on your board. In my case, I used [this one](https://github.com/lemariva/micropython-core2).
 
 Next, easiest is to install `adafruit-micropython` (see [here](https://learn.adafruit.com/micropython-basics-load-files-and-run-code/install-ampy)) and execute `make upload device=DEVICEPATH`, device path will be something like `/dev/…`.
 
