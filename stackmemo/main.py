@@ -1,3 +1,9 @@
+"""
+A simple spaced repetition system for the M5Stack Core2
+and probably also other ESP32 devices with similar screens
+and capabilities.
+"""
+
 import gc
 import lvgl as lv
 
@@ -76,7 +82,7 @@ class QandA:
         self._ui_next_button()
         self._ui_wrong_button()
         self._ui_right_button()
-        self._ui_info_button()
+        #self._ui_info_button()
         self._ui_main_text()
 
     def off_event_handler(self, evt):
@@ -103,7 +109,7 @@ class QandA:
         self.wrong_button = lv.btn(lv.scr_act())
         self.wrong_button.add_style(style_btn_red, 0)
         self.wrong_button.align(lv.ALIGN.BOTTOM_LEFT, 8, -8)
-        self.wrong_button.set_size(80, 50)
+        self.wrong_button.set_size(100, 50)
         wrong_button_label = lv.label(self.wrong_button)
         wrong_button_label.set_text("Wrong")
         wrong_button_label.align(lv.ALIGN.CENTER, 0, 0)
@@ -114,7 +120,7 @@ class QandA:
         self.right_button = lv.btn(lv.scr_act())
         self.right_button.add_style(style_btn_green, 0)
         self.right_button.align(lv.ALIGN.BOTTOM_RIGHT, -8, -8)
-        self.right_button.set_size(60, 50)
+        self.right_button.set_size(100, 50)
         right_button_label = lv.label(self.right_button)
         right_button_label.set_text("Right")
         right_button_label.align(lv.ALIGN.CENTER, 0, 0)
@@ -154,6 +160,8 @@ class QandA:
         self.label.set_style_text_align(lv.TEXT_ALIGN.LEFT, 0)
         self.label.align(lv.ALIGN.CENTER, 0, -35)
         self.set_question()
+        self.label.add_event_cb(self.show_info_event_handler, lv.EVENT.ALL, None)
+        self.info = False
 
     def set_question(self):
         self.question = self.qer.get_question()
