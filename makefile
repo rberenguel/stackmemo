@@ -13,7 +13,9 @@ upload_%:
 reset:
 > ampy --port /dev/$(device) run reset.py
 
-upload: upload_main.py upload_memo.py upload_questioner.py upload_qa.py
+uploadcode: upload_main.py upload_memo.py upload_questioner.py upload_colorify.py
+
+upload: uploadcode upload_qa.py
 
 upload_other_qa: 
 > ampy --port /dev/$(device) put $(remote_qa_path)
@@ -21,6 +23,7 @@ upload_other_qa:
 test:
 > python3 test_memo.py
 > python3 test_questioner.py
+> python3 test_colorify.py
 
 format:
 > black .

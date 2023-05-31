@@ -10,6 +10,7 @@ import lvgl as lv
 import json
 import time
 
+from colorify import colorify
 from qa import qa
 from questioner import Questioner
 import memo
@@ -44,33 +45,6 @@ style_btn_clean.init()
 style_btn_clean.set_bg_color(lv.palette_main(lv.PALETTE.NONE))
 style_btn_clean.set_border_width(0)
 style_btn_clean.set_radius(0)
-
-
-def colorify(txt):
-    opened = False
-    new_text = []
-    for c in txt:
-        if c == "_":
-            opened = not opened
-            if opened:
-                new_text.append("#003399 ")
-            else:
-                new_text.append("# ")
-        elif c == "*":
-            opened = not opened
-            if opened:
-                new_text.append("#009933 ")
-            else:
-                new_text.append("# ")
-        elif c == "`":
-            opened = not opened
-            if opened:
-                new_text.append("#993300 ")
-            else:
-                new_text.append("# ")
-        else:
-            new_text.append(c)
-    return "".join(new_text)
 
 
 class QandA:
