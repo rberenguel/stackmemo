@@ -39,6 +39,12 @@ style_btn_do = lv.style_t()
 style_btn_do.init()
 style_btn_do.set_bg_color(lv.palette_main(lv.PALETTE.DEEP_ORANGE))
 
+style_btn_clean = lv.style_t()
+style_btn_clean.init()
+style_btn_clean.set_bg_color(lv.palette_main(lv.PALETTE.NONE))
+style_btn_clean.set_border_width(0)
+style_btn_clean.set_radius(0)
+
 
 def colorify(txt):
     opened = False
@@ -75,15 +81,15 @@ class QandA:
         except:
             memos = {}
         self.qer = Questioner(qa, memos)
+        self.off_button = None
         self._build_ui()
 
     def _build_ui(self):
+        self._ui_main_text()
         self._ui_off_button()
         self._ui_next_button()
         self._ui_wrong_button()
         self._ui_right_button()
-        #self._ui_info_button()
-        self._ui_main_text()
 
     def off_event_handler(self, evt):
         code = evt.get_code()
@@ -138,21 +144,15 @@ class QandA:
             self.show_answer_event_handler, lv.EVENT.ALL, None
         )
 
-    def _ui_info_button(self):
-        self.info_button = lv.btn(lv.scr_act())
-        self.info_button.align(lv.ALIGN.TOP_RIGHT, -3, 3)
-        self.info_button.set_size(60, 50)
-        self.info_button_label = lv.label(self.info_button)
-        self.info_button_label.set_text(lv.SYMBOL.EYE_OPEN)
-        self.info_button_label.align(lv.ALIGN.CENTER, 0, 0)
-        self.info_button.add_event_cb(self.show_info_event_handler, lv.EVENT.ALL, None)
-        self.info = False
-
     def _ui_main_text(self):
         style_fnt = lv.style_t()
         style_fnt.init()
         style_fnt.set_text_font(lv.font_montserrat_16)
-        self.label = lv.label(lv.scr_act())
+        self.button = lv.btn(lv.scr_act())
+        self.button.align(lv.ALIGN.TOP_LEFT, 0, 0)
+        self.button.set_size(320, 240)
+        self.button.add_style(style_btn_clean, 0)
+        self.label = lv.label(self.button)
         self.label.add_style(style_fnt, 0)
         self.label.set_long_mode(lv.label.LONG.WRAP)
         self.label.set_width(240)
@@ -160,8 +160,7 @@ class QandA:
         self.label.set_style_text_align(lv.TEXT_ALIGN.LEFT, 0)
         self.label.align(lv.ALIGN.CENTER, 0, -35)
         self.set_question()
-        self.label.add_event_cb(self.show_info_event_handler, lv.EVENT.ALL, None)
-        self.info = False
+        self.button.add_event_cb(self.show_info_event_handler, lv.EVENT.ALL, None)
 
     def set_question(self):
         self.question = self.qer.get_question()
@@ -169,13 +168,16 @@ class QandA:
         self.label.set_text(colorify(q))
         self.questioning = True
         self.answering = False
-        self.off_button.clear_flag(lv.obj.FLAG.HIDDEN)
+        self.info = False
+        if self.off_button:
+            self.off_button.clear_flag(lv.obj.FLAG.HIDDEN)
 
     def set_answer(self):
         a = self.question["answer"]
         self.label.set_text(colorify(a))
         self.answering = True
         self.questioning = False
+        self.info = False
         self.off_button.add_flag(lv.obj.FLAG.HIDDEN)
 
     def wrong_handler(self, evt):
@@ -216,7 +218,7 @@ class QandA:
             n = self.question["n"]
             ef = self.question["ef"]
             i_n = self.question["i_n"]
-            txt = "_n_: " + str(n) + "\n_i.n_:" + str(i_n) + "\n_ef_: " + str(ef)
+            txt = "_n_:  " + str(n) + "\n_i.n_:  " + str(i_n) + "\n_ef_:  " + str(ef)
             self.label.set_text(colorify(txt))
             self.info = True
 
