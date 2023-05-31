@@ -22,7 +22,7 @@ class TestSuperMemo2Basics(unittest.TestCase):
     def test_breakage_scenario(self):
         # If lvgl breaks text, it removes styling, so…
         fied = colorify("\n`foo bar baz`")
-        self.assertEqual(fied, "\n#993300 foo#  #993300 bar#  #993300 baz# ")
+        self.assertEqual(fied, "\n#993300 foo# #993300 bar# #993300 baz# ")
 
 
 if __name__ == "__main__":

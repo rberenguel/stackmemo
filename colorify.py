@@ -33,4 +33,4 @@ def colorify(txt):
         else:
             space = False
             new_text.append(c)
-    return "".join(new_text)
+    return "".join(new_text).replace("  ", " ")
