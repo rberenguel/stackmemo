@@ -55,19 +55,19 @@ def colorify(txt):
             if opened:
                 new_text.append("#003399 ")
             else:
-                new_text.append("#")
+                new_text.append("# ")
         elif c == "*":
             opened = not opened
             if opened:
                 new_text.append("#009933 ")
             else:
-                new_text.append("#")
+                new_text.append("# ")
         elif c == "`":
             opened = not opened
             if opened:
                 new_text.append("#993300 ")
             else:
-                new_text.append("#")
+                new_text.append("# ")
         else:
             new_text.append(c)
     return "".join(new_text)
@@ -155,7 +155,7 @@ class QandA:
         self.label = lv.label(self.button)
         self.label.add_style(style_fnt, 0)
         self.label.set_long_mode(lv.label.LONG.WRAP)
-        self.label.set_width(240)
+        self.label.set_width(300)
         self.label.set_recolor(True)
         self.label.set_style_text_align(lv.TEXT_ALIGN.LEFT, 0)
         self.label.align(lv.ALIGN.CENTER, 0, -35)
