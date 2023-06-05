@@ -54,9 +54,14 @@ class QandA:
             memos = json.load(f)
         except:
             memos = {}
+        try:
+            f = open("to_edit.json")
+            self.to_edit = json.load(f)
+        except:
+            self.to_edit = []
         self.qer = Questioner(qa, memos)
         self.off_button = None
-        self.to_edit = []
+        self.next_button = None
         self.q_counter = 0
         self._build_ui()
 
@@ -76,7 +81,7 @@ class QandA:
             json.dump(self.qer.dump_memos(), f)
         try:
             if self.to_edit:
-                with open("to_edit.json", "a") as f:
+                with open("to_edit.json", "w") as f:
                     json.dump(self.to_edit, f)
         except:
             pass
@@ -161,6 +166,8 @@ class QandA:
         self.questioning = True
         self.answering = False
         self.info = False
+        if self.next_button:
+            self.next_button.clear_flag(lv.obj.FLAG.HIDDEN)
         if self.off_button:
             self.off_button.clear_flag(lv.obj.FLAG.HIDDEN)
 
@@ -171,6 +178,8 @@ class QandA:
         self.questioning = False
         self.info = False
         self.off_button.add_flag(lv.obj.FLAG.HIDDEN)
+        self.wrong_button.clear_flag(lv.obj.FLAG.HIDDEN)
+        self.right_button.clear_flag(lv.obj.FLAG.HIDDEN)
 
     def to_edit_handler(self, evt):
         code = evt.get_code()
@@ -218,6 +227,9 @@ class QandA:
         else:
             self.to_edit_button.clear_flag(lv.obj.FLAG.HIDDEN)
             self.off_button.add_flag(lv.obj.FLAG.HIDDEN)
+            self.wrong_button.add_flag(lv.obj.FLAG.HIDDEN)
+            self.right_button.add_flag(lv.obj.FLAG.HIDDEN)
+            self.next_button.add_flag(lv.obj.FLAG.HIDDEN)
             n = self.question["n"]
             ef = self.question["ef"]
             i_n = self.question["i_n"]
