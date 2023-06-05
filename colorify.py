@@ -2,7 +2,7 @@ def colorify(txt):
     opened = None
     space = True  # Start of string
     new_text = []
-    mapping = {"_": "#003399 ", "*": "#009933 ", "`": "#993300 "}
+    mapping = {"_": "#0033AA ", "*": "#00AA33 ", "`": "#AA3300 "}
     for c in txt:
         if c in mapping:
             if not opened and space:

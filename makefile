@@ -30,3 +30,12 @@ format:
 
 lint:
 > proselint README.md
+
+ls:
+> ampy --port /dev/$(device) ls
+
+to_edit:
+> ampy --port /dev/$(device) get to_edit.json
+
+clean_to_edit:
+> ampy --port /dev/$(device) rm to_edit.json

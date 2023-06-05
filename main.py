@@ -56,6 +56,8 @@ class QandA:
             memos = {}
         self.qer = Questioner(qa, memos)
         self.off_button = None
+        self.to_edit = []
+        self.q_counter = 0
         self._build_ui()
 
     def _build_ui(self):
@@ -64,16 +66,32 @@ class QandA:
         self._ui_next_button()
         self._ui_wrong_button()
         self._ui_right_button()
+        self._ui_to_edit_button()
 
     def off_event_handler(self, evt):
         code = evt.get_code()
         if code != lv.EVENT.CLICKED:
             return
-        self.off_button_label.set_text(lv.SYMBOL.REFRESH)
         with open("memos.json", "w") as f:
             json.dump(self.qer.dump_memos(), f)
-        time.sleep(1)
+        try:
+            if self.to_edit:
+                with open("to_edit.json", "a") as f:
+                    json.dump(self.to_edit, f)
+        except:
+            pass
+        time.sleep(2)
         m5.power_off()
+
+    def _ui_to_edit_button(self):
+        self.to_edit_button = lv.btn(lv.scr_act())
+        self.to_edit_button.align(lv.ALIGN.TOP_RIGHT, -3, 3)
+        self.to_edit_button.set_size(150, 150)
+        to_edit_button_label = lv.label(self.to_edit_button)
+        to_edit_button_label.set_text("To fix")
+        to_edit_button_label.align(lv.ALIGN.CENTER, 0, 0)
+        self.to_edit_button.add_event_cb(self.to_edit_handler, lv.EVENT.ALL, None)
+        self.to_edit_button.add_flag(lv.obj.FLAG.HIDDEN)
 
     def _ui_off_button(self):
         self.off_button = lv.btn(lv.scr_act())
@@ -154,6 +172,12 @@ class QandA:
         self.info = False
         self.off_button.add_flag(lv.obj.FLAG.HIDDEN)
 
+    def to_edit_handler(self, evt):
+        code = evt.get_code()
+        if code != lv.EVENT.CLICKED:
+            return
+        self.to_edit += [self.question["id"]]
+
     def wrong_handler(self, evt):
         code = evt.get_code()
         if code != lv.EVENT.CLICKED:
@@ -161,6 +185,7 @@ class QandA:
         q = 2
         updated = memo.answered(q, self.question)
         self.qer.update_question(updated)
+        self.q_counter += 1
         self._ui_switch_to_question()
 
     def right_handler(self, evt):
@@ -170,6 +195,7 @@ class QandA:
         q = 4.5
         updated = memo.answered(q, self.question)
         self.qer.update_question(updated)
+        self.q_counter += 1
         self._ui_switch_to_question()
 
     def _ui_switch_to_question(self):
@@ -183,16 +209,30 @@ class QandA:
         if code != lv.EVENT.CLICKED:
             return
         if self.info:
+            self.to_edit_button.add_flag(lv.obj.FLAG.HIDDEN)
             if self.questioning:
                 self.set_question()
             if self.answering:
                 self.set_answer()
             self.info = False
         else:
+            self.to_edit_button.clear_flag(lv.obj.FLAG.HIDDEN)
+            self.off_button.add_flag(lv.obj.FLAG.HIDDEN)
             n = self.question["n"]
             ef = self.question["ef"]
             i_n = self.question["i_n"]
-            txt = "_n_:  " + str(n) + "\n_i.n_:  " + str(i_n) + "\n_ef_:  " + str(ef)
+            txt = (
+                "_n_:  "
+                + str(n)
+                + "\n_i.n_:  "
+                + str(i_n)
+                + "\n_ef_:  "
+                + str(ef)
+                + "\n*c*:  "
+                + str(self.q_counter)
+                + "\n*F*:  "
+                + str(len(self.to_edit))
+            )
             self.label.set_text(colorify(txt))
             self.info = True
 
