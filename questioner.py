@@ -5,6 +5,8 @@ class Questioner:
             qa.update(memo.get(qa["id"], self._default_info()))
             self.qas.append(qa)
         self._sort()
+        self.asked = []
+        self.q_index = 0
 
     def _sort(self):
         """Shouldn't be extremely expensive to compute, since it's almost all sorted after the first"""
@@ -14,11 +16,15 @@ class Questioner:
         return {"n": 0, "i_n": 0, "ef": 2.5}
 
     def get_question(self):
-        return self.qas[0]
+        for idx, qa in enumerate(self.qas):
+            if qa["id"] not in self.asked:
+                self.q_index = idx
+                return qa
 
     def update_question(self, new_memo):
-        """The question to be updated is _always_ 0"""
-        self.qas[0].update(new_memo)
+        """The question to be updated is in self.q_index"""
+        self.qas[self.q_index].update(new_memo)
+        self.asked.append(self.qas[self.q_index]["id"])
         self._sort()
 
     def dump_memos(self):

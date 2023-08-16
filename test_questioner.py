@@ -24,6 +24,13 @@ class TestQuestioner(unittest.TestCase):
         self.assertEqual(q["i_n"], 6)
         self.assertEqual(q["ef"], 2.5)
 
+    def test_skip_repeated(self):
+        questioner = qer.Questioner(self.qa, self.answer_info)
+        _ = questioner.get_question()
+        questioner.update_question(self.answer_info["q0"])
+        q = questioner.get_question()
+        self.assertEqual(q["id"], "q0")
+
     def test_dump(self):
         questioner = qer.Questioner(self.qa, self.answer_info)
         questioner.update_question({"n": 12, "i_n": 6, "ef": 2.5})
